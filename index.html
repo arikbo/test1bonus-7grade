@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>דפי חזרה – מתמטיקה כיתה ז׳</title>
+<link href="https://fonts.googleapis.com/css2?family=Rubik:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root{--ink:#1c2740;--paper:#fbfbf7;--line:#d9e2f1;--blue:#2457d6;--ok:#1f8a4c;--bad:#c8382e;--hl:#ffe45e}
+@media (prefers-color-scheme:dark){:root{--ink:#e8edf8;--paper:#161c2b;--line:#27324a;--blue:#7ea2ff;--ok:#5fd18b;--bad:#ff8077;--hl:#5a4b00}}
+*{box-sizing:border-box}
+body{margin:0;font-family:Rubik,system-ui,sans-serif;color:var(--ink);background:var(--paper);
+background-image:linear-gradient(var(--line) 1px,transparent 1px),linear-gradient(90deg,var(--line) 1px,transparent 1px);background-size:24px 24px;line-height:1.6}
+main{max-width:720px;margin:0 auto;padding:16px 14px 90px}
+h1{font-size:1.6rem;margin:.2em 0}
+.school{font-size:.85rem;opacity:.8}
+.card{background:var(--paper);border:2px solid var(--ink);border-radius:6px;padding:14px;margin:14px 0}
+.bonus{background:var(--hl);color:#1c2740;border-color:#1c2740}
+.bonus b{display:block;font-size:1.05rem}
+.id{display:grid;gap:10px}
+label.f{display:grid;gap:3px;font-weight:500}
+input,select,textarea{font:inherit;color:inherit;background:var(--paper);border:1.5px solid var(--ink);border-radius:5px;padding:7px 9px;min-width:0}
+input:focus,select:focus,textarea:focus,button:focus-visible{outline:3px solid var(--blue);outline-offset:1px}
+h2{font-size:1.25rem;margin:26px 0 4px;padding:4px 10px;background:var(--ink);color:var(--paper);border-radius:4px}
+.q h3{margin:0 0 6px;font-size:1.05rem;color:var(--blue)}
+.q .intro{margin:0 0 8px}
+.parts{display:flex;flex-wrap:wrap;gap:8px 14px}
+.p{flex:1 1 100%;display:flex;flex-wrap:wrap;align-items:center;gap:6px;padding:4px 6px;border-radius:5px;border-inline-start:4px solid transparent}
+.p.sm{flex:1 1 150px}
+.p>span{flex:1 1 100%}
+.p.sm>span{flex:0 0 auto}
+.p input:not([type=checkbox]),.p select,.p textarea{flex:1 1 130px;max-width:100%}
+.p textarea{height:2.6em}
+.p .ck{display:inline-flex;gap:5px;align-items:center;margin-inline-end:10px}
+.p.ok{border-inline-start-color:var(--ok);background:rgba(31,138,76,.12)}
+.p.bad{border-inline-start-color:var(--bad);background:rgba(200,56,46,.12)}
+.p.open textarea{border-style:dashed}
+svg.fig{display:block;max-width:100%;height:auto;margin:6px auto;direction:ltr}
+svg text{fill:var(--ink);font-family:Rubik,sans-serif}
+.btn{font:inherit;font-weight:700;border:2px solid var(--ink);background:var(--blue);color:#fff;padding:11px 20px;border-radius:6px;cursor:pointer}
+.btn.alt{background:transparent;color:var(--ink)}
+#res{display:none;text-align:center}
+#res .big{font-size:2.2rem;font-weight:700}
+.bar{position:fixed;inset:auto 0 0 0;background:var(--paper);border-top:2px solid var(--ink);padding:10px;display:flex;gap:10px;justify-content:center;z-index:5}
+#msg{font-size:.9rem;margin-top:6px}
+.note{font-size:.85rem;opacity:.85}
+</style>
+</head>
+<body>
+<main>
+<div class="school">עתידים – התיכון העירוני השש שנתי ע״ש מ. אלישיב, חולון</div>
+<h1>דפי חזרה למבחן במתמטיקה – כיתה ז׳</h1>
+<div class="school">המבחן: יום ג׳, 3.11.26</div>
+
+<div class="card bonus">
+<b>בונוס!</b>
+מי שיגיש את דפי החזרה פתורים ביום המבחן בלבד – יקבל בונוס של נקודות במבחן.
+<b style="margin-top:8px">הציון באתר לא משפיע על הבונוס.</b>
+אפשר לתרגל כמה פעמים שרוצים – כל ניסיון נשמר, ורק התרגול חשוב. השאלות הולכות מהקלות לקשות. אפשר להיעזר במחברת ובספר.
+</div>
+
+<div class="card id">
+<label class="f">שם התלמיד/ה<input id="name" autocomplete="name"></label>
+<label class="f">כיתה<select id="cls"><option value="">בחרו כיתה</option><option>ז1</option><option>ז2</option><option>ז3</option><option>ז4</option><option>ז5</option><option>ז6</option></select></label>
+<label class="f">המורה למתמטיקה<select id="teacher"><option value="">בחרו מורה</option><option>אריק</option><option>טלי</option><option>שמוליק</option><option>אילנה</option><option>אליעזר</option><option>פזית</option><option>ורד</option></select></label>
+</div>
+
+<div id="sheet"></div>
+
+<div class="card" id="res"></div>
+</main>
+<div class="bar"><button class="btn" id="go">בדיקה ושליחה</button><button class="btn alt" id="reset">ניסיון חדש</button></div>
+
+<script src="config.js"></script>
+<script>
+/* ---------- helpers: answer parsing ---------- */
+const nums=s=>(String(s).replace(/[−–﹣]/g,'-').match(/-?\d+(\.\d+)?/g)||[]).map(Number);
+const ltr=s=>String(s).toUpperCase().match(/[A-Z]/g)||[];
+const nrm=s=>String(s).trim().toUpperCase().replace(/[\s"'״׳()]/g,'');
+const an=(a,v,b)=>s=>{const l=ltr(s);return l.length==3&&l[1]==v&&((l[0]==a&&l[2]==b)||(l[0]==b&&l[2]==a))};
+const legs=(v,a,b)=>s=>{const l=[...new Set(ltr(s).filter(x=>x!=v))].sort().join('');return l==[a,b].sort().join('')};
+const tm=h=>s=>{const m=s.trim().replace('.',':').match(/^(\d{1,2})(:00)?$/);return !!m&&m[1]%12==h%12};
+const has=(...a)=>s=>{const n=nums(s);return a.every(x=>n.includes(x))};
+const N=(t,a)=>({t,k:'n',a}),P=(t,a)=>({t,k:'p',a}),S=(t,o,a)=>({t,k:'s',o,a}),O=t=>({t,k:'o'}),
+T=(t,a)=>({t,k:'t',a}),L=(t,a)=>({t,k:'l',a}),C=(t,f)=>({t,k:'c',f}),M=(t,o,a)=>({t,k:'m',o,a});
+const TYPES=['חדה','ישרה','קהה','שטוחה'];
+
+/* ---------- figures (SVG) ---------- */
+const sv=(w,h,b)=>`<svg class="fig" viewBox="0 0 ${w} ${h}" width="${w}">${b}</svg>`;
+const ln=(a,b,c,d,w=2,x='')=>`<line x1="${a}" y1="${b}" x2="${c}" y2="${d}" stroke="currentColor" stroke-width="${w}" ${x}/>`;
+const tx=(x,y,t,s=12,x2='')=>`<text x="${x}" y="${y}" font-size="${s}" text-anchor="middle" ${x2}>${t}</text>`;
+const dot=(x,y)=>`<circle cx="${x}" cy="${y}" r="3.5" fill="currentColor"/>`;
+function G(W,H,c,ex){const m=34,w=m+W*c+18,h=14+H*c+30,X=x=>m+x*c,Y=y=>14+(H-y)*c;let s='';
+for(let i=1;i<=W;i++)s+=ln(X(i),Y(0),X(i),Y(H),1,'stroke-opacity=".28"')+tx(X(i),Y(0)+17,i);
+for(let j=1;j<=H;j++)s+=ln(X(0),Y(j),X(W),Y(j),1,'stroke-opacity=".28"')+tx(X(0)-12,Y(j)+4,j);
+s+=ln(X(0),Y(0),X(0),Y(H)-8,2.5)+ln(X(0),Y(0),X(W)+12,Y(0),2.5)+tx(X(0)-12,Y(0)+17,0)+tx(X(0)+10,10,'y',13,'font-style="italic"')+tx(X(W)+14,Y(0)+17,'x',13,'font-style="italic"');
+return sv(w,h,s+ex(X,Y))}
+const blank=()=>G(10,8,28,()=>'');
+const secret=()=>G(8,7,34,(X,Y)=>[['ל',1,6],['ר',0,4],['צ',2,3],['ש',4,4],['נ',3,0],['י',5,1],['ו',7,2],['ם',6,6]].map(([l,x,y])=>dot(X(x),Y(y))+tx(X(x)+11,Y(y)-6,l,16,'font-weight="700"')).join(''));
+const garden=()=>G(8,6,34,(X,Y)=>`<polygon points="${X(1)},${Y(1)} ${X(7)},${Y(1)} ${X(7)},${Y(5)} ${X(1)},${Y(5)}" fill="currentColor" fill-opacity=".1" stroke="currentColor" stroke-width="3"/>`+ln(X(4),Y(1),X(4),Y(5),3,'stroke-dasharray="9 6"')+[['A',1,1,-10,14],['B',7,1,10,14],['C',7,5,10,-4],['D',1,5,-10,-4]].map(([l,x,y,a,b])=>dot(X(x),Y(y))+tx(X(x)+a,Y(y)+b,l,15,'font-weight="700"')).join(''));
+function thermo(){let s='';[-4,7,-9].forEach((t,i)=>{const o=20+i*110,y=v=>80-v*6;s+=tx(o+20,10,i+1,14,'font-weight="700"')+`<rect x="${o+8}" y="16" width="24" height="138" rx="3" fill="none" stroke="currentColor" stroke-width="2"/><rect x="${o+11}" y="${y(t)}" width="18" height="${151-y(t)}" fill="currentColor" opacity=".7"/>`;
+for(let v=-11;v<=11;v++){const b=v%5==0;s+=ln(o+34,y(v)+0,o+(b?50:42),y(v),1.5);if(b&&Math.abs(v)<11)s+=tx(o+66,y(v)+4,v<0?'−'+-v:v,11)}});return sv(350,170,s)}
+function line(){let s=ln(8,30,552,30,2);for(let n=-7;n<=7;n++){const x=40+(n+7)*36;s+=ln(x,22,x,38,2)+tx(x,56,n<0?'−'+-n:n,12)}return sv(560,64,s)}
+const pt=(P,r,a)=>[P[0]+r*Math.cos(a*Math.PI/180),P[1]-r*Math.sin(a*Math.PI/180)];
+const ang=(P,Q)=>Math.atan2(-(Q[1]-P[1]),Q[0]-P[0])*180/Math.PI;
+function arcV(P,Q,R,r,lab){const a1=ang(P,Q),d=((ang(P,R)-a1)+540)%360-180,s=pt(P,r,a1),e=pt(P,r,a1+d),m=pt(P,r+12,a1+d/2);
+return `<path d="M${s}A${r} ${r} 0 0 ${d>0?0:1} ${e}" fill="none" stroke="currentColor" stroke-width="2"/>`+tx(m[0],m[1]+5,lab,14,'font-weight="700"')}
+function tri1(){const A=[29,167],B=[116,28],Cc=[269,167],D=[164,167],ps=(p,l,dx,dy)=>dot(...p)+tx(p[0]+dx,p[1]+dy,l,16,'font-weight="700"');
+return sv(300,190,`<polygon points="${A} ${B} ${Cc}" fill="none" stroke="currentColor" stroke-width="3"/>`+ln(...B,...D,3)+ps(A,'A',-8,6)+ps(B,'B',0,-8)+ps(Cc,'C',10,6)+ps(D,'D',0,18)+arcV(B,A,D,26,1)+arcV(B,D,Cc,32,2)+arcV(D,A,B,22,1)+arcV(D,B,Cc,34,2))}
+function tri2(){const K=[30,150],L=[250,135],M=[100,20],ps=(p,l,dx,dy)=>tx(p[0]+dx,p[1]+dy,l,16,'font-weight="700"');
+return sv(290,175,`<polygon points="${K} ${L} ${M}" fill="none" stroke="currentColor" stroke-width="3"/>`+ps(K,'K',-10,14)+ps(L,'L',12,6)+ps(M,'M',0,-6)+arcV(M,K,L,22,'α')+arcV(K,M,L,26,'β')+arcV(L,K,M,34,'γ'))}
+function clocks(){let s='';[3,1,6,5].forEach((h,i)=>{const o=50+i*100;s+=`<g transform="translate(${o} 52)"><circle r="40" fill="none" stroke="currentColor" stroke-width="2.5"/>`;
+for(let k=1;k<=12;k++){const a=k*30-90,r=a*Math.PI/180;s+=ln(33*Math.cos(r),33*Math.sin(r),40*Math.cos(r),40*Math.sin(r),1.5)+tx(26*Math.cos(r),26*Math.sin(r)+3,k,8)}
+s+=ln(0,0,0,-33,2.5)+`<line x1="0" y1="0" x2="0" y2="-21" stroke="currentColor" stroke-width="4" stroke-linecap="round" transform="rotate(${h*30})"/><circle r="3" fill="currentColor"/></g>`+tx(o,108,'אבגד'[i],15,'font-weight="700"')});return sv(400,114,s)}
+function angs(list){let s='';list.forEach(([d,r,l],i)=>{const o=d>90?[i*170+110,80]:[i*170+25,80],V=o,e=pt(V,r,d),a0=pt(V,16,0),a1=pt(V,16,d);
+s+=ln(...V,V[0]+r,V[1],3)+ln(...V,...e,3)+`<path d="M${a0}A16 16 0 0 0 ${a1}" fill="none" stroke="currentColor" stroke-width="2"/>`+tx(V[0]+40,20,l,15,'font-weight="700"')});return sv(list.length*170+30,95,s)}
+const ang3=()=>angs([[30,90,'א'],[150,90,'ב'],[95,90,'ג']]);
+const ang2=()=>angs([[36,150,1],[75,70,2]]);
+
+/* ---------- questions ---------- */
+const Q=[
+['מערכת הצירים'],
+{n:1,t:'מסע בצירים',i:'יוצאים מראשית הצירים, הנקודה (0,0). לאיזו נקודה מגיעים? כתבו את השיעורים שלה.',f:blank,p:[
+P('א. זזים 3 משבצות ימינה ו-5 משבצות למעלה.',[3,5]),P('ב. זזים 6 משבצות ימינה, ולא זזים למעלה בכלל.',[6,0]),P('ג. לא זזים ימינה, רק 4 משבצות למעלה.',[0,4]),O('ד. איך מגיעים מראשית הצירים לנקודה (2,7)? כתבו במילים.')]},
+{n:2,t:'המילה הסודית',i:'במערכת הצירים מסומנות אותיות. כל אות נמצאת בנקודה אחרת.',f:secret,p:[
+T('א. (2,3) ←','צ'),T('(5,1) ←','י'),T('(0,4) ←','ר'),T('(5,1) ←','י'),T('(6,6) ←','ם'),T('המילה היא:','צירים'),
+P('ב. שיעורי האות ש במילה "שלום":',[4,4]),P('שיעורי ל:',[1,6]),P('שיעורי ו:',[7,2]),P('שיעורי ם:',[6,6]),
+T('ג. איזו אות נמצאת על ציר ה-x?','נ'),T('ואיזו אות על ציר ה-y?','ר')]},
+{n:3,t:'איפה נמצאת הנקודה?',i:'בחרו לכל נקודה את המקום המתאים.',p:[...[['(0,5)',1],['(4,0)',0],['(3,3)',3],['(0,0)',2],['(7,0)',0],['(0,2)',1]].map(([a,k])=>S(a,['על ציר ה-x','על ציר ה-y','ראשית הצירים','לא על אף ציר'],k)),
+S('ב. לכל נקודה שנמצאת על ציר ה-x, השיעור ה-___ שלה הוא 0',['x','y'],1)]},
+{n:4,t:'משרטטים צורות',f:blank,p:[
+P('א. הנקודות A(1,1), B(5,1), C(5,5). הוסיפו D כך ש-ABCD ריבוע. שיעורי D:',[1,5]),
+C('ב. E(6,2), F(10,2). G בדיוק מעל אמצע EF, ו-EFG משולש. שיעורי G (יש כמה תשובות):',s=>{const n=nums(s);return n.length==2&&n[0]==8&&n[1]>2})]},
+{n:5,t:'אורך בלי לשרטט',i:'חשבו את אורך הקטע בלי לשרטט.',p:[N('A(2,6) B(9,6): AB =',7),N('C(4,1) D(4,8): CD =',7),N('E(0,3) F(10,3): EF =',10),O('ד. הסבירו: איך מצאתם את AB בלי לשרטט? מה משותף ל-A ול-B?')]},
+{n:6,t:'הקצה החסר',p:[P('א. קטע אופקי באורך 5, קצה אחד (3,2). הקצה השני, ברביע הראשון ובכיוון ימינה:',[8,2]),P('ב. קטע אנכי באורך 4, הקצה התחתון (6,1). הקצה העליון:',[6,5])]},
+{n:7,t:'הגינה של בית הספר',i:'הגינה ABCD במערכת צירים. כל משבצת היא מטר. הקו המקווקו הוא שביל.',f:garden,p:[
+P('א. שיעורי הפינה C:',[7,5]),N('ב. אורך AB (במטרים):',6),N('אורך BC (במטרים):',4),N('ג. כמה מטרים של גדר מסביב לגינה?',20),
+P('ד. הקצה התחתון של השביל:',[4,1]),P('הקצה העליון של השביל:',[4,5]),N('אורך השביל:',4)]},
+{n:8,t:'אתגר: נקודות על קטע',i:'כמה נקודות עם שני שיעורים שלמים נמצאות על הקטע שמחבר את (1,3) ו-(6,3), כולל הקצוות?',p:[N('כמה נקודות?',6),O('כתבו את כולן:')]},
+['מספרים מכוונים'],
+{n:9,t:'מדחומים',i:'כל שנתה קטנה היא מעלה אחת.',f:thermo,p:[N('א. מדחום 1:',-4),N('מדחום 2:',7),N('מדחום 3:',-9),S('ב. איזה מדחום מראה את הטמפרטורה הנמוכה ביותר?',['1','2','3'],2),N('ג. בכמה מעלות צריכה הטמפרטורה במדחום 1 לעלות כדי להגיע ל-0?',4)]},
+{n:10,t:'השלימו את הסדרה',i:'המספרים בקפיצות שוות.',f:line,p:[N('(−6), __ ,(−2), 0, __ ,4 : המספר הראשון החסר',-4),N('המספר השני החסר',2),N('(−15),(−10), __ ,0, __ : הראשון',-5),N('השני',5),N('3, 2, 1, __ , __ , __ : הראשון',0),N('השני',-1),N('השלישי',-2)]},
+{n:11,t:'מהחיים למספרים',i:'כתבו מספר חיובי או שלילי שמתאים לכל מצב.',p:[N('הר מירון נמצא 1,208 מטר מעל פני הים',1208),N('ים המלח נמצא 430 מטר מתחת לפני הים',-430),N('הקבוצה הפסידה 3 נקודות',-3),N('המחיר של הכרטיס עלה ב-5 שקלים',5),N('החניון נמצא 2 קומות מתחת לקרקע',-2),O('ב. כתבו מצב מהחיים שמתאים ל-(−8), ומצב שמתאים ל-12.')]},
+{n:12,t:'אמת או שקר?',p:[['כל מספר שלילי קטן מ-0.',1],['(−10) גדול מ-(−2).',0],['0 הוא מספר חיובי.',0],['כל מספר חיובי גדול מכל מספר שלילי.',1],['על ציר המספרים, (−5) נמצא מימין ל-(−8).',1],['מבין המספרים השלמים השליליים, (−1) הוא הגדול ביותר.',1]].map(([a,k])=>S(a,['אמת','שקר'],k?0:1))},
+{n:13,t:'השלימו מספר מתאים',i:'יש הרבה תשובות נכונות!',p:[C('__ < (−4)',s=>{const n=nums(s);return n.length==1&&n[0]<-4}),C('(−1) > __',s=>{const n=nums(s);return n.length==1&&n[0]<-1}),C('(−3) < __ < 1',s=>{const n=nums(s);return n.length==1&&n[0]>-3&&n[0]<1})]},
+{n:14,t:'מהגדול לקטן',i:'סדרו מהגדול ביותר לקטן ביותר: 3, (−8), 0, (−1), 12, (−15). כתבו מופרדים בפסיקים.',p:[L('הסדר:',[12,3,0,-1,-8,-15])]},
+{n:15,t:'זוגות נגדיים',p:[M('א. הקיפו את הזוגות הנגדיים:',['7 , (−7)','(−3) , 3','4 , (−5)','0 , 0','10 , (−1)'],[0,1,3]),
+N('ב. P ו-Q נגדיים, המרחק ביניהם 10, ו-P משמאל ל-0. P =',-5),N('Q =',5),N('ג. המספר הנגדי למספר הנגדי של 7:',7)]},
+{n:16,t:'ערך מוחלט – מרחק מ-0',p:[C('א. אילו מספרים נמצאים במרחק 3 מ-0? (כתבו את שניהם)',has(3,-3)),C('ב. המספרים שהערך המוחלט שלהם 4:',has(4,-4)),
+S('ג. מי רחוק יותר מ-0?',['(−7)','5'],0),O('הסבירו בעזרת ערך מוחלט:'),N('ד. |−15| =',15),N('|15| =',15),N('|−1| =',1),N('|0| =',0)]},
+{n:17,t:'משחק על הציר',i:'רוני ודנה משחקים על ציר המספרים.',p:[N('א. רוני מתחיל ב-0, זז 4 צעדים שמאלה ו-6 ימינה. איפה הוא בסוף?',2),N('ב. דנה על (−3). כמה צעדים עד 0?',3),N('וכמה צעדים עד המספר הנגדי לשלה?',6),S('ג. מי קרוב יותר ל-0: רוני בסוף או דנה לפני שזזה?',['רוני','דנה'],0),O('איך זה קשור לערך מוחלט?')]},
+{n:18,t:'חידות',p:[N('א. כמה מספרים שלמים יש בין (−4) ל-3 (בלי הקצוות)?',6),O('כתבו אותם:'),N('ב. מספר שלם שלילי, המרחק שלו מ-0 גדול מ-2 וקטן מ-4. מי אני?',-3),N('ג. אני המספר היחיד ששווה למספר הנגדי לו. מי אני?',0)]},
+['זוויות'],
+{n:19,t:'קוראים שם של זווית',i:'כתבו את אות הקודקוד, ואת האותיות של שתי השוקיים (למשל ב-ABC: A,C).',p:[['ABC','B','A','C'],['MON','O','M','N'],['XYZ','Y','X','Z'],['KLP','L','K','P']].flatMap(([a,v,x,y])=>[T('∠'+a+' – קודקוד:',v),C('שוקיים:',legs(v,x,y))])},
+{n:20,t:'שרטטו בעצמכם',i:'שרטטו במחברת, וסמנו כאן שסיימתם.',p:[O('א. ∠PQR עם הקודקוד מסומן – הערות:'),O('ב. זווית קהה ∠DEF – הערות:'),O('ג. זווית חדה עם האות α – הערות:')]},
+{n:21,t:'זוויות במשולש',i:'D על AC, והקטע BD מחלק את המשולש. כתבו כל זווית בשלוש אותיות.',f:tri1,p:[C('א. ∠B1 =',an('A','B','D')),C('∠B2 =',an('D','B','C')),C('∠D1 =',an('A','D','B')),C('∠D2 =',an('B','D','C')),
+S('ב. אפשר לקרוא ל-∠B1 בשם ∠B?',['כן','לא'],1),S('אפשר לקרוא לזווית שבקודקוד A בשם ∠A?',['כן','לא'],0),O('הסבירו:'),S('ג. איזו זווית היא ∠ADC?',TYPES,3)]},
+{n:22,t:'אותיות יווניות',f:tri2,p:[S('א. אלפא',['α','β','γ','δ'],0),S('בטא',['α','β','γ','δ'],1),S('גמא',['α','β','γ','δ'],2),S('דלתא',['α','β','γ','δ'],3),
+C('ב1. β היא הזווית ∠ (שלוש אותיות)',an('M','K','L')),S('ב2. ∠KML מסומנת באות',['α','β','γ'],0),T('ב3. γ היא הזווית ∠ (אות אחת)','L')]},
+{n:23,t:'סוגי זוויות לפי מעלות',p:[['45°',0],['90°',1],['120°',2],['180°',3],['89°',0],['179°',2]].map(([a,k])=>S(a,TYPES,k))},
+{n:24,t:'זוויות בשעון',i:'כתבו את השעה בכל שעון (למשל 3:00) ואת סוג הזווית בין המחוגים.',f:clocks,p:[[3,1,'א'],[1,0,'ב'],[6,3,'ג'],[5,2,'ד']].flatMap(([h,k,l])=>[C('שעון '+l+' – שעה:',tm(h)),S('סוג הזווית:',TYPES,k)]).concat([S('ב. באיזה שעון הזווית הקטנה ביותר?',['א','ב','ג','ד'],1)])},
+{n:25,t:'אומדן זוויות',i:'בחרו את האומדן המתאים ואת סוג הזווית.',f:ang3,p:[S('א. אומדן',['30°','90°','150°'],0),S('סוג',TYPES,0),S('ב. אומדן',['30°','90°','150°'],2),S('סוג',TYPES,2),S('ג. אומדן',['60°','95°','170°'],1),S('סוג',TYPES,2)]},
+{n:26,t:'מי צודק?',i:'נועה: "זווית 1 גדולה יותר מזווית 2, כי הקווים שלה ארוכים יותר."',f:ang2,p:[S('האם נועה צודקת?',['כן','לא'],1),O('הסבירו:')]},
+{n:27,t:'זוויות באותיות',i:'באיזה סוג זווית אפשר לראות בכל אות?',p:[S('L',TYPES,1),S('V',TYPES,0),S('T',TYPES,1)]}
+];
+
+/* ---------- render ---------- */
+let id=0;const parts=[];
+const $=s=>document.querySelector(s);
+const sheet=$('#sheet');
+Q.forEach(q=>{
+ if(Array.isArray(q)){sheet.insertAdjacentHTML('beforeend',`<h2>${q[0]}</h2>`);return}
+ let h=`<section class="card q"><h3>שאלה ${q.n} – ${q.t}</h3>`;
+ if(q.i)h+=`<p class="intro">${q.i}</p>`;
+ if(q.f)h+=q.f();
+ h+='<div class="parts">';
+ q.p.forEach(p=>{
+  const i=id++;p.i=i;p.q=q.n;parts.push(p);
+  let c;
+  if(p.k=='s')c=`<select data-i="${i}"><option value="">בחרו</option>${p.o.map((o,j)=>`<option value="${j}">${o}</option>`).join('')}</select>`;
+  else if(p.k=='m')c=p.o.map((o,j)=>`<label class="ck"><input type="checkbox" data-i="${i}" value="${j}">${o}</label>`).join('');
+  else if(p.k=='o')c=`<textarea data-i="${i}" aria-label="תשובה"></textarea>`;
+  else c=`<input data-i="${i}" ${'npl'.includes(p.k)?'dir="ltr" inputmode="text"':''} autocomplete="off">`;
+  const sm=(p.k=='s'&&p.t.length<24)||(p.k=='n'&&p.t.length<30)||p.k=='p'&&p.t.length<30||p.k=='t';
+  h+=`<div class="p${sm?' sm':''}${p.k=='o'?' open':''}" id="p${i}"><span>${p.t}</span>${c}</div>`;
+ });
+ sheet.insertAdjacentHTML('beforeend',h+'</div></section>');
+});
+
+const val=p=>{const e=[...document.querySelectorAll(`[data-i="${p.i}"]`)];
+ return p.k=='m'?e.filter(x=>x.checked).map(x=>+x.value):e[0].value};
+function grade(p,v){
+ if(p.k=='o')return null;
+ if(p.k=='m')return v.length==p.a.length&&p.a.every(x=>v.includes(x));
+ if(v===''||v==null)return false;
+ const n=nums(v);
+ switch(p.k){
+  case 'n':return n.length==1&&n[0]==p.a;
+  case 'p':return n.length==2&&n[0]==p.a[0]&&n[1]==p.a[1];
+  case 'l':return n.length==p.a.length&&p.a.every((x,i)=>n[i]==x);
+  case 's':return +v==p.a;
+  case 't':return nrm(v)==nrm(p.a);
+  case 'c':return !!p.f(v);
+ }}
+
+/* ---------- save + send ---------- */
+const KEY='math7_attempts';
+const get=()=>{try{return JSON.parse(localStorage.getItem(KEY)||'[]')}catch(e){return[]}};
+const put=a=>{try{localStorage.setItem(KEY,JSON.stringify(a))}catch(e){}};
+$('#go').onclick=async()=>{
+ const name=$('#name').value.trim(),cls=$('#cls').value,teacher=$('#teacher').value,r=$('#res');
+ if(!name||!cls||!teacher){alert('לפני הבדיקה: כתבו שם, בחרו כיתה ובחרו מורה.');window.scrollTo({top:0,behavior:'smooth'});return}
+ let ok=0,tot=0;const wrong=new Set();
+ parts.forEach(p=>{const g=grade(p,val(p)),el=$('#p'+p.i);el.classList.remove('ok','bad');
+  if(g===null)return;tot++;if(g){ok++;el.classList.add('ok')}else{wrong.add(p.q);el.classList.add('bad')}});
+ const pct=Math.round(ok/tot*100),all=get(),attempt=all.filter(a=>a.name==name&&a.cls==cls&&a.teacher==teacher).length+1;
+ const rec={ts:new Date().toISOString(),teacher,cls,name,score:ok,max:tot,pct,attempt,wrong:[...wrong].join(',')};
+ all.push(rec);put(all);
+ r.style.display='block';
+ r.innerHTML=`<div class="big">${ok} / ${tot}</div><div>${pct}% · ניסיון מספר ${attempt}</div><p>${pct==100?'מושלם! 🎉':'השאלות המסומנות באדום – נסו שוב. שאלות פתוחות לא נספרות בציון, פתרו אותן בדף.'}</p><p class="note">הציון לא משפיע על הבונוס. הבונוס ניתן על הגשת הדפים פתורים ביום המבחן.</p><div id="msg">שולח…</div>`;
+ r.scrollIntoView({behavior:'smooth',block:'center'});
+ const m=$('#msg'),ep=(window.CONFIG||{}).ENDPOINT;
+ if(!ep){m.textContent='התוצאה נשמרה במכשיר זה (השליחה למורה עדיין לא הופעלה).';return}
+ try{await fetch(ep,{method:'POST',mode:'no-cors',headers:{'Content-Type':'text/plain'},body:JSON.stringify(rec)});m.textContent='התוצאה נשלחה למורה '+teacher+' ✓'}
+ catch(e){m.textContent='השליחה נכשלה – התוצאה נשמרה במכשיר. נסו שוב.'}
+};
+$('#reset').onclick=()=>{document.querySelectorAll('[data-i]').forEach(e=>{e.type=='checkbox'?e.checked=false:e.value=''});
+ document.querySelectorAll('.p').forEach(e=>e.classList.remove('ok','bad'));$('#res').style.display='none';window.scrollTo({top:0,behavior:'smooth'})};
+</script>
+</body>
+</html>
